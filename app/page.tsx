@@ -4,45 +4,38 @@ import { useState, type FormEvent } from "react";
 import SpecView from "@/components/SpecView";
 import type { Spec } from "@/lib/types";
 
-const mockSpec: Spec = {
-  product_name: "Campus Welcome",
-  one_liner: "외국인 학생을 위한 한국 대학 문화 행사 기획 도구",
-  problem: "처음 한국 대학에 온 외국인 학생은 캠퍼스 문화와 생활 정보를 이해하기 어렵습니다.",
-  target_users: [
-    { persona: "교환학생", pain: "낯선 대학 문화와 지원 정보를 모릅니다." },
-    { persona: "운영진", pain: "참여자 배경을 고려한 행사를 기획하기 어렵습니다." },
-  ],
-  core_features: [
-    { name: "한·영 행사 안내", description: "목적과 준비물을 두 언어로 정리합니다.", priority: "P0" },
-    { name: "참여형 문화 활동", description: "처음 만난 학생들의 어색함을 풉니다.", priority: "P0" },
-    { name: "식단 안내", description: "식단과 알레르기 정보를 미리 안내합니다.", priority: "P0" },
-    { name: "참가 신청서", description: "한·영 질문으로 참가자를 받습니다.", priority: "P1" },
-  ],
-  user_flow: ["운영진이 행사 아이디어를 입력합니다.", "PRD를 생성합니다.", "기획안을 확인합니다.", "참가자에게 안내를 공유합니다."],
-  screens: [
-    { name: "PRD 만들기", purpose: "행사 아이디어를 입력합니다." },
-    { name: "생성 결과", purpose: "기획안을 확인합니다." },
-    { name: "참가 신청", purpose: "참가자가 신청서를 작성합니다." },
-  ],
-  data_model: [{ table: "events", columns: ["id uuid", "title text", "guide jsonb"] }],
-  api_endpoints: [{ method: "POST", path: "/api/specs", description: "행사 PRD 생성" }],
-  out_of_scope: ["로그인과 회원가입", "실시간 협업", "결제"],
-  risks: ["정해지지 않은 정보를 AI가 임의로 만들 수 있습니다.", "식단 정보가 누락될 수 있습니다."],
-  first_prompt: "외국인 학생을 위한 한국 대학 문화 소개 행사 페이지를 만들어줘. 쉬운 한국어와 영어를 함께 사용해줘.",
-};
-
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [spec, setSpec] = useState<Spec | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsGenerating(true);
     setSpec(null);
-    window.setTimeout(() => {
-      setSpec(mockSpec);
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    try {
+      const response = await fetch("/api/specs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.get("title"), problem: formData.get("problem"),
+          target: formData.get("target") || "", timeframe: formData.get("timeframe"),
+        }),
+      });
+      const result = await response.json() as { error?: string; spec?: Spec };
+      if (!response.ok || !result.spec) {
+        setError(result.error || "PRD를 만드는 중 문제가 발생했습니다.");
+      } else {
+        setSpec(result.spec);
+      }
+    } catch {
+      setError("PRD를 만드는 중 문제가 발생했습니다.");
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   }
 
   return (
@@ -69,7 +62,7 @@ export default function Home() {
             <Field label="타깃 유저 (선택)" name="target" placeholder="한국 대학에 처음 온 외국인 학생" />
             <label className="block">
               <span className="mb-2 block text-sm font-medium">행사 준비 기간</span>
-              <select defaultValue="1주" className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-3 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
+              <select name="timeframe" defaultValue="1주" className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-3 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
                 <option>1주</option><option>2주</option><option>1달</option>
               </select>
             </label>
@@ -78,7 +71,10 @@ export default function Home() {
             </button>
           </form>
         </section>
-        <div className="mt-8" aria-live="polite">{spec ? <SpecView spec={spec} /> : null}</div>
+        <div className="mt-8" aria-live="polite">
+          {error ? <p className="rounded-lg border border-[var(--accent)] bg-[var(--accent-soft)] p-4 text-sm text-[var(--accent)]">{error}</p> : null}
+          {spec ? <SpecView spec={spec} /> : null}
+        </div>
       </main>
     </div>
   );

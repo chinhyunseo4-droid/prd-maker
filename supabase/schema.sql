@@ -8,7 +8,7 @@ create table if not exists public.specs (
   title        text not null,
   problem      text not null,
   target       text,
-  timeframe    text not null default '해커톤 24시간',
+  timeframe    text not null default '1주',
   product_name text not null,
   spec         jsonb not null
 );

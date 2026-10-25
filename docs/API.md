@@ -65,12 +65,12 @@ supabase/
   "title": "해커톤 팀원 매칭",
   "problem": "해커톤 직전에 팀을 못 구해서 혼자 나가거나 포기한다",
   "target": "해커톤 처음 나가는 대학생",
-  "timeframe": "해커톤 24시간"
+  "timeframe": "1주"
 }
 ```
 
 처리 순서:
-1. 검증: `title` 1~100자, `problem` 1~1000자 (아니면 400). `target`은 비어도 됨. `timeframe`이 "해커톤 24시간" / "1주" / "1달"이 아니면 "해커톤 24시간"으로.
+1. 검증: `title` 1~100자, `problem` 1~1000자 (아니면 400). `target`은 비어도 됨. `timeframe`이 "1주" / "2주" / "1달"이 아니면 "1주"로.
 2. `generateSpec()`으로 OpenAI 호출 (실패하면 502)
 3. `specs` 테이블에 insert (실패하면 500)
 4. 응답
@@ -109,7 +109,7 @@ Step 2에서는 3번(저장)을 빼고 `{ "spec": ... }`만 돌려준다. Step 3
 | `title` | text, not null | 사용자가 넣은 아이디어 이름 |
 | `problem` | text, not null | 사용자가 넣은 문제 |
 | `target` | text, null 허용 | 사용자가 넣은 타깃 |
-| `timeframe` | text, not null | 개발 기간 |
+| `timeframe` | text, not null | 행사 준비 기간 |
 | `product_name` | text, not null | AI가 지은 제품명 (목록 표시용) |
 | `spec` | jsonb, not null | AI 출력 전체 |
 

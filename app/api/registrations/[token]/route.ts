@@ -11,7 +11,7 @@ export async function GET(_: Request, { params }: RouteContext) {
       .select("event_name, participant_guide").eq("public_token", token).maybeSingle();
     if (formError) return error("신청서를 불러오지 못했습니다.", 500);
     if (!data) return error("유효하지 않은 참가 신청 링크입니다.", 404);
-    return NextResponse.json({ form: data as RegistrationForm });
+    return NextResponse.json({ form: { event_name: data.event_name, guide: data.participant_guide } as RegistrationForm });
   } catch { return error("신청서를 불러오지 못했습니다.", 500); }
 }
 

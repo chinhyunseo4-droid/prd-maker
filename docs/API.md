@@ -149,6 +149,7 @@ Step 2에서는 3번(저장)을 빼고 `{ "spec": ... }`만 돌려준다. Step 3
 | `out_of_scope` | string[] | 일부러 안 만드는 것 |
 | `risks` | string[] | 2~3개 |
 | `first_prompt` | string | Claude Code/Codex에 바로 넣을 첫 프롬프트 |
+| `participant_guide` | `{ purpose, schedule, venue, items_to_prepare, dietary_notice }` | 각 값에 한국어와 English를 함께 쓴 참가자 안내문 |
 
 `strict: true` 규칙 (어기면 OpenAI가 400 에러를 준다):
 - 모든 object에 `additionalProperties: false`
@@ -162,6 +163,20 @@ Step 2에서는 3번(저장)을 빼고 `{ "spec": ... }`만 돌려준다. Step 3
 3. `lib/openai.ts`의 `instructions`에 그 필드 규칙 한 줄 추가
 4. `components/SpecView.tsx`와 `lib/markdown.ts`에 표시 추가
 5. DB는 안 건드린다 (jsonb라서)
+
+## 6-1. 참가 신청서와 응답 (내 버전)
+
+PRD를 저장하면 `event_forms`도 함께 만든다. 신청서에는 이름, 사용 언어, 식단·알레르기, 필요한 지원을 한국어와 English로 표시한다.
+
+| 테이블 | 주요 컬럼 | 설명 |
+|---|---|---|
+| `event_forms` | `spec_id`, `event_name`, `participant_guide`, `public_token`, `manager_token_hash` | PRD와 연결된 공개 신청서 |
+| `event_responses` | `form_id`, `name`, `preferred_language`, `dietary_allergies`, `support_needs` | 참가자의 제출 응답 |
+
+- `GET /api/registrations/[token]`: 참가자에게 행사명·안내문만 반환한다. 응답 목록은 반환하지 않는다.
+- `POST /api/registrations/[token]`: 참가자 응답을 검증해 저장한다.
+- `GET /api/specs/[id]/responses`: PRD 생성 브라우저에 HttpOnly 쿠키로 저장된 운영진 토큰을 검증한 뒤에만 응답 목록을 반환한다. 없거나 다르면 403이다.
+- 운영진 토큰은 데이터베이스에 해시로만 저장한다. 참가자 링크에는 공개 토큰만 포함한다.
 
 ## 7. 외부 의존성
 

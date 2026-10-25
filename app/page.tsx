@@ -7,12 +7,16 @@ import type { Spec } from "@/lib/types";
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [spec, setSpec] = useState<Spec | null>(null);
+  const [applicationUrl, setApplicationUrl] = useState<string | null>(null);
+  const [responsesUrl, setResponsesUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsGenerating(true);
     setSpec(null);
+    setApplicationUrl(null);
+    setResponsesUrl(null);
     setError(null);
 
     const formData = new FormData(event.currentTarget);
@@ -25,11 +29,13 @@ export default function Home() {
           target: formData.get("target") || "", timeframe: formData.get("timeframe"),
         }),
       });
-      const result = await response.json() as { error?: string; spec?: Spec };
+      const result = await response.json() as { error?: string; spec?: Spec; application_url?: string; responses_url?: string };
       if (!response.ok || !result.spec) {
         setError(result.error || "PRD를 만드는 중 문제가 발생했습니다.");
       } else {
         setSpec(result.spec);
+        setApplicationUrl(result.application_url || null);
+        setResponsesUrl(result.responses_url || null);
       }
     } catch {
       setError("PRD를 만드는 중 문제가 발생했습니다.");
@@ -73,7 +79,7 @@ export default function Home() {
         </section>
         <div className="mt-8" aria-live="polite">
           {error ? <p className="rounded-lg border border-[var(--accent)] bg-[var(--accent-soft)] p-4 text-sm text-[var(--accent)]">{error}</p> : null}
-          {spec ? <SpecView spec={spec} /> : null}
+          {spec ? <SpecView spec={spec} applicationUrl={applicationUrl || undefined} responsesUrl={responsesUrl || undefined} /> : null}
         </div>
       </main>
     </div>

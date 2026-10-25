@@ -18,6 +18,7 @@ export async function generateSpec(input: CreateSpecInput): Promise<Spec> {
       "core_features는 4~6개, P0는 최대 3개, user_flow는 4~6단계로 작성하세요.",
       "screens는 2~4개, data_model은 1~3개, api_endpoints는 2~5개로 작성하세요.",
       "정해지지 않은 행사 정보는 임의로 확정하지 말고, 필요한 경우 미정이라고 표시하세요.",
+      "participant_guide에는 참가자용 한영 안내문을 작성하세요. purpose, schedule, venue, items_to_prepare, dietary_notice 각각에 한국어와 English를 함께 쓰세요.",
     ].join("\n"),
     input: JSON.stringify(input),
     text: { format: { type: "json_schema", name: "prd", strict: true, schema: specSchema } },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateSpec } from "@/lib/openai";
+import { createToken, hashToken } from "@/lib/registration";
 import { getSupabase } from "@/lib/supabase";
 import type { CreateSpecInput, SpecListItem } from "@/lib/types";
 
@@ -29,7 +30,19 @@ export async function POST(request: Request) {
       product_name: spec.product_name, spec,
     }).select("id, created_at").single();
     if (insertError || !data) return error("PRD 저장에 실패했습니다.", 500);
-    return NextResponse.json({ id: data.id, created_at: data.created_at, spec }, { status: 201 });
+
+    const publicToken = createToken();
+    const managerToken = createToken();
+    const { error: formError } = await getSupabase().from("event_forms").insert({
+      spec_id: data.id, event_name: spec.product_name, participant_guide: spec.participant_guide,
+      public_token: publicToken, manager_token_hash: hashToken(managerToken),
+    });
+    if (formError) return error("참가 신청서를 만드는 데 실패했습니다.", 500);
+
+    const origin = new URL(request.url).origin;
+    const response = NextResponse.json({ id: data.id, created_at: data.created_at, spec, application_url: `${origin}/apply/${publicToken}`, responses_url: `${origin}/specs/${data.id}/responses` }, { status: 201 });
+    response.cookies.set(`event-manager-${data.id}`, managerToken, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 30 });
+    return response;
   } catch { return error("PRD 저장에 실패했습니다.", 500); }
 }
 

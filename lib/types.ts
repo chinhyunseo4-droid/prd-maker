@@ -17,6 +17,13 @@ export type Spec = {
   out_of_scope: string[];
   risks: string[];
   first_prompt: string;
+  participant_guide: {
+    purpose: string;
+    schedule: string;
+    venue: string;
+    items_to_prepare: string;
+    dietary_notice: string;
+  };
 };
 
 export type CreateSpecInput = {
@@ -33,4 +40,18 @@ export type SpecListItem = {
   product_name: string;
   timeframe: string;
   one_liner: string;
+};
+
+export type RegistrationForm = {
+  event_name: string;
+  guide: Spec["participant_guide"];
+};
+
+export type RegistrationResponse = {
+  id: string;
+  created_at: string;
+  name: string;
+  preferred_language: string;
+  dietary_allergies: string;
+  support_needs: string;
 };

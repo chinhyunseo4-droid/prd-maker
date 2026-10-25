@@ -23,3 +23,29 @@ alter table public.specs enable row level security;
 -- 2026-05-30 이후 만든 프로젝트는 새 테이블이 API에 자동 노출되지 않는다.
 -- 이 grant가 없으면 "42501 permission denied for table specs" 에러가 난다.
 grant select, insert, update, delete on public.specs to service_role;
+
+create table if not exists public.event_forms (
+  id                 uuid primary key default gen_random_uuid(),
+  created_at         timestamptz not null default now(),
+  spec_id            uuid not null unique references public.specs(id) on delete cascade,
+  event_name         text not null,
+  participant_guide  jsonb not null,
+  public_token       text not null unique,
+  manager_token_hash text not null
+);
+
+create table if not exists public.event_responses (
+  id                   uuid primary key default gen_random_uuid(),
+  created_at           timestamptz not null default now(),
+  form_id              uuid not null references public.event_forms(id) on delete cascade,
+  name                 text not null,
+  preferred_language   text not null,
+  dietary_allergies    text not null,
+  support_needs        text not null
+);
+
+create index if not exists event_responses_form_created_at_idx on public.event_responses (form_id, created_at desc);
+alter table public.event_forms enable row level security;
+alter table public.event_responses enable row level security;
+grant select, insert, update, delete on public.event_forms to service_role;
+grant select, insert, update, delete on public.event_responses to service_role;

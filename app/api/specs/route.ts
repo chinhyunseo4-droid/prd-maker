@@ -16,7 +16,12 @@ export async function POST(request: Request) {
   };
 
   let spec;
-  try { spec = await generateSpec(input); } catch { return error("PRD를 만드는 중 AI 호출에 실패했습니다.", 502); }
+  try {
+    spec = await generateSpec(input);
+  } catch (generationError) {
+    console.error("OpenAI PRD generation failed:", generationError);
+    return error("PRD를 만드는 중 AI 호출에 실패했습니다.", 502);
+  }
 
   try {
     const { data, error: insertError } = await getSupabase().from("specs").insert({

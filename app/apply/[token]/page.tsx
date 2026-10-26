@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useParams } from "next/navigation";
 import type { RegistrationForm } from "@/lib/types";
 
 export default function ApplicationPage() {
+  return <Suspense fallback={<Message text="불러오는 중..." />}><ApplicationContent /></Suspense>;
+}
+
+function ApplicationContent() {
   const params = useParams<{ token: string }>();
   const [form, setForm] = useState<RegistrationForm | null>(null);
   const [error, setError] = useState<string | null>(null);
